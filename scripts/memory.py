@@ -1,6 +1,8 @@
-from config import Config, Singleton
-import pinecone
 import openai
+import pinecone
+from config import Config, Singleton
+from loguru import logger
+from pinecone import ForbiddenException
 
 cfg = Config()
 
@@ -43,7 +45,11 @@ class PineconeMemory(metaclass=Singleton):
         return self.get_relevant(data, 1)
 
     def clear(self):
-        self.index.delete(deleteAll=True)
+        try:
+            self.index.delete(deleteAll=True)
+        except ForbiddenException as e:
+            logger.exception(e)
+            return f'Failed {e}'
         return "Obliviated"
 
     def get_relevant(self, data, num_relevant=5):
